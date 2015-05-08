@@ -1,39 +1,43 @@
+/*
+ * This Class is the main server class it is responsible for starting the two threads that look after
+ * client/server communication. 
+ */
 package com.peerchat;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class Server {
 
-	private ServerSocket serverSocket;
-	private static final ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
 	private ArrayList<ClientWorker> clients = new ArrayList<ClientWorker>();
-	
+	private ArrayList<InetAddress> servers = new ArrayList<InetAddress>();
+
 	//Constructor
-	public Server(ServerSocket serverSocket){
-		this.serverSocket = serverSocket;
+	public Server(){
+		
 	}
 	
-	//Start the server
-	public void start(){
-		try{
-			while(true){
-				if(executorService.getActiveCount() < executorService.getMaximumPoolSize()){
-					Socket socket = serverSocket.accept();
-					ClientWorker client = new ClientWorker(socket, this);
-					clients.add(client);
-					Server.executorService.execute(client);
-				}
-			}
+	//Add a new client to clients list
+	public void addClient(ClientWorker client){
+		if(!clients.contains(client)){
+			clients.add(client);
 		}
-		catch(Exception e){
-			System.out.println(e);
+	}
+	
+	//Add a new IP address to list of server
+	public void addServer(InetAddress ipAddress){
+		if(!servers.contains(ipAddress)){
+			servers.add(ipAddress);
 		}
+	}
+	
+	//Forward Message to all known servers
+	public void forwardtoServer(String message){
+		
 	}
 	
 	//Forward Message to all of the clients registered with this server
@@ -46,8 +50,11 @@ public class Server {
 	
 	//Main method
 	public static void main(String[] args) throws IOException {
-		Server server = new Server(new ServerSocket(8767));
-		server.start();
+		Server server = new Server();
+		ClientHandler clientHandler = new ClientHandler(server, new ServerSocket(8888));
+		ServerHandler serverHandler = new ServerHandler(server, new DatagramSocket(9999));
+		clientHandler.start();
+		serverHandler.start();
 	}
 	
 }

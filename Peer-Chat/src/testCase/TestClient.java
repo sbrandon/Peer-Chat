@@ -2,6 +2,7 @@ package testCase;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.LinkedHashMap;
@@ -15,10 +16,12 @@ public class TestClient {
 	private BufferedReader reader;
 	private int portNumber;
 	private Socket socket;
+	private boolean connected;
 	
 	public TestClient(int portNumber){
 		new BufferedReader(new InputStreamReader(System.in));
 		this.portNumber = portNumber;
+		connected = false;
 		try{
 			this.socket = new Socket("localhost", portNumber);
 		}
@@ -30,37 +33,51 @@ public class TestClient {
 	public void start(){
 		try
 		{
-			System.out.println("Client is running. Port No. " + portNumber);
-			System.out.println();
+			new Listener().start();
 			sendMessage = new DataOutputStream(socket.getOutputStream());
-			testChat();
+			connected = true;
 		}
 		catch(Exception e)
 		{
 			System.out.println("Cannot Connect With Server");
+			connected = false;
 		}	
-	}
-	
-	public void testChat(){
-		try
-		{
-			Map<String, String> map = new LinkedHashMap<String, String>();
-			map.put("type","CHAT");
-			String jsonText = JSONValue.toJSONString(map);
-			sendMessage.writeBytes(jsonText + "\n");
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			System.out.println(reader.readLine());
-		}
-		catch(Exception e)
-		{
-			System.out.println("Cannot Connect With Server");
+		while(connected){
+		    try {
+		    	BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+				String input = bufferRead.readLine();
+				Map<String, String> map = new LinkedHashMap<String, String>();
+				map.put("type","CHAT");
+				map.put("text", input);
+				String jsonText = JSONValue.toJSONString(map);
+				sendMessage.writeBytes(jsonText + "\n");
+			} catch (IOException e) {
+				e.printStackTrace();
+				connected = false;
+			}
 		}
 	}
 	
 	//Main
 	public static void main(String args[]) throws Exception {
-		int portNumber = 8767;
+		int portNumber = 8888;
 		TestClient client = new TestClient(portNumber);
 		client.start();
+	}
+	
+	public class Listener extends Thread{
+		
+		public void run(){
+			try {
+				reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				while(true){
+					if(reader.ready()){
+						System.out.println("FROM SERVER: " + reader.readLine());
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

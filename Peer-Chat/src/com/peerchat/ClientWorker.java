@@ -1,3 +1,6 @@
+/*
+ * This class handles the client functions.
+ */
 package com.peerchat;
 
 import java.io.BufferedReader;
@@ -89,7 +92,8 @@ public class ClientWorker implements Runnable, PeerChat{
 						case "LEAVING_NETWORK":
 							break;
 						case "CHAT":
-							server.forwardToClient("Hello :)\n");
+							String message = json.get("text").toString();
+							server.forwardToClient(message);
 							break;
 						case "ACK_CHAT":
 							break;
