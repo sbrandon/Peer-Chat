@@ -1,33 +1,26 @@
 /*
- * This class handles the client functions.
+ * This class represents the node variables and functions.
+ * Stephen Brandon May '14
  */
 package com.peerchat;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-public class ClientWorker implements Runnable, PeerChat{
+public class PeerWorker implements Runnable, PeerChat{
 
 	private Socket socket;
-	private Server server;
-	private PrintWriter writer;
+	private Peer peer;
 	
 	//Constructor
-	public ClientWorker(Socket socket, Server server){
+	public PeerWorker(Socket socket, Peer peer){
 		this.socket = socket;
-		this.server = server;
-		try {
-			this.writer = new PrintWriter(socket.getOutputStream(), true);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.peer = peer;
 	}
 	
 	//The following function implements hashing of an arbitrary string.
@@ -77,13 +70,14 @@ public class ClientWorker implements Runnable, PeerChat{
 				String command = "";
 				while(reader.ready()){
 					command = reader.readLine();
-					System.out.println("SERVER-RECEIVED: " + command);
+					System.out.println("NODE-RECEIVED: " + command);
 				}
 				if(!command.isEmpty()){
 					JSONObject json = (JSONObject) new JSONParser().parse(command);
 					String type = json.get("type").toString();
 					switch(type){
-						case "JOINING_NETWORK": 
+						case "JOINING_NETWORK":
+							peer.routingInfo(json.get("node_id").toString());
 							break;
 						case "JOINING_NETWORK_RELAY":
 							break;
@@ -92,8 +86,6 @@ public class ClientWorker implements Runnable, PeerChat{
 						case "LEAVING_NETWORK":
 							break;
 						case "CHAT":
-							String message = json.get("text").toString();
-							server.forwardToClient(message);
 							break;
 						case "ACK_CHAT":
 							break;
@@ -112,31 +104,6 @@ public class ClientWorker implements Runnable, PeerChat{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	//Getters & Setters
-	public Socket getSocket() {
-		return socket;
-	}
-
-	public void setSocket(Socket socket) {
-		this.socket = socket;
-	}
-
-	public Server getServer() {
-		return server;
-	}
-
-	public void setServer(Server server) {
-		this.server = server;
-	}
-
-	public PrintWriter getWriter() {
-		return writer;
-	}
-
-	public void setWriter(PrintWriter writer) {
-		this.writer = writer;
 	}
 
 }

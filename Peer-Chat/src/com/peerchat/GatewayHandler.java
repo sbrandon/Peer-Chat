@@ -1,5 +1,6 @@
 /*
- * This thread handles TCP communications form clients that are registered/subscribed to this server.
+ * This thread handles TCP communications for nodes that use this node as a gateway.
+ * Stephen Brandon May '14
  */
 package com.peerchat;
 
@@ -8,14 +9,14 @@ import java.net.Socket;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class ClientHandler extends Thread{
+public class GatewayHandler extends Thread{
 	
 	private ServerSocket serverSocket;
 	private static final ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-	private Server server;
+	private Peer server;
 	
 	//Constructor
-	public ClientHandler(Server server, ServerSocket serverSocket){
+	public GatewayHandler(Peer server, ServerSocket serverSocket){
 		this.server = server;
 		this.serverSocket = serverSocket;
 	}
@@ -25,9 +26,8 @@ public class ClientHandler extends Thread{
 			while(true){
 				if(executorService.getActiveCount() < executorService.getMaximumPoolSize()){
 					Socket socket = serverSocket.accept();
-					ClientWorker client = new ClientWorker(socket, server);
-					server.addClient(client);
-					ClientHandler.executorService.execute(client);
+					PeerWorker client = new PeerWorker(socket, server);
+					GatewayHandler.executorService.execute(client);
 				}
 			}
 		}
@@ -37,11 +37,11 @@ public class ClientHandler extends Thread{
 	}
 	
 	//Getters & Setters
-	public Server getServer() {
+	public Peer getServer() {
 		return server;
 	}
 
-	public void setServer(Server server) {
+	public void setServer(Peer server) {
 		this.server = server;
 	}
 

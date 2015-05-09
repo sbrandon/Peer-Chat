@@ -18,8 +18,8 @@ public class TestClient {
 	private Socket socket;
 	private boolean connected;
 	
+	//Constructor
 	public TestClient(int portNumber){
-		new BufferedReader(new InputStreamReader(System.in));
 		this.portNumber = portNumber;
 		connected = false;
 		try{
@@ -33,9 +33,11 @@ public class TestClient {
 	public void start(){
 		try
 		{
-			new Listener().start();
+			//new Listener().start();
+			reader = new BufferedReader(new InputStreamReader(System.in));
 			sendMessage = new DataOutputStream(socket.getOutputStream());
 			connected = true;
+			join();
 		}
 		catch(Exception e)
 		{
@@ -44,8 +46,7 @@ public class TestClient {
 		}	
 		while(connected){
 		    try {
-		    	BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
-				String input = bufferRead.readLine();
+				String input = reader.readLine();
 				Map<String, String> map = new LinkedHashMap<String, String>();
 				map.put("type","CHAT");
 				map.put("text", input);
@@ -56,6 +57,25 @@ public class TestClient {
 				connected = false;
 			}
 		}
+	}
+	
+	public void join(){
+		System.out.println("Please join the network...");
+		try {
+			Map<String, String> map = new LinkedHashMap<String, String>();
+			map.put("type","JOINING_NETWORK");
+			System.out.println("Enter Node ID:");
+			String nodeId = reader.readLine();
+			map.put("node_id", nodeId);
+			System.out.println("Enter IP Address of Gateway Node:");
+			String ipAddress = reader.readLine();
+			map.put("ip_address", ipAddress);
+			String jsonText = JSONValue.toJSONString(map);
+			sendMessage.writeBytes(jsonText + "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	//Main
