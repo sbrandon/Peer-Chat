@@ -1,11 +1,9 @@
 package com.peerchat;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,9 +13,7 @@ public class PeerUI extends Thread{
 	
 	private Peer peer;
 	private BufferedReader reader;
-	private DataOutputStream sendMessage;
-	private Socket socket;
-	
+
 	//Constructor
 	public PeerUI(Peer peer){
 		this.peer = peer;
@@ -26,19 +22,12 @@ public class PeerUI extends Thread{
 	
 	public void run(){
 		joinNetwork();
-	}
-	
-	//Opens a new socket to given IP address.
-	public void openSocket(String ipAddress){
-		try{
-			socket = new Socket(ipAddress, 8767);
-			sendMessage = new DataOutputStream(socket.getOutputStream());
-		}catch(Exception e){
-			System.out.println("ERROR: Could Connect to Gateway");
+		while(true){
+			menu();
 		}
 	}
 	
-	//Allow this node to join the network
+	//Allow this node to join the network.
 	public void joinNetwork(){
 		try {
 			System.out.println("Please Join The Network...");
@@ -54,20 +43,51 @@ public class PeerUI extends Thread{
 			//Initialise own node values
 			peer.setIpAddress(InetAddress.getLocalHost().getHostAddress().toString());
 			peer.setNodeId(nodeId);
-			//Send to gateway
-			openSocket(gatewayIp);
-			sendMessage.writeBytes(jsonText + "\n");
-			sendMessage.close();
-			socket.close();
+			peer.communicate(gatewayIp, jsonText);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	//Allow this node to chat
+	//Send chat messages to other nodes.
 	public void chat(){
-		
+		try{
+			System.out.println("Enter Target ID (00 to send to all nodes)");
+			String targetId = reader.readLine();
+			System.out.println("Enter Your Message...");
+			String message = reader.readLine();
+			peer.chat(targetId, message);
+		} catch(IOException e){
+			e.printStackTrace();
+		}
 	}
 	
+	//User menu
+	public void menu(){
+		try{
+			System.out.println("Menu: Enter number");
+			System.out.println("1. Send Chat Message");
+			System.out.println("2. Leave Network");
+			String choice = reader.readLine();
+			if(choice.equals("1")){
+				chat();
+			}
+			else if(choice.equals("2")){
+				leave();
+			}
+			else{
+				System.out.println("Not a valid option. Please type a number and then press return.");
+			}
+		}
+		catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	//Leave the network
+	public void leave(){
+		//TODO Implement graceful exit!
+		System.exit(0);
+	}
 	
 }

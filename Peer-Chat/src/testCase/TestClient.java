@@ -1,3 +1,8 @@
+/*
+ * This is an old test case for client server type chat network. 
+ * Not currently in use.
+ * Stephen Brandon May '14
+ */
 package testCase;
 
 import java.io.BufferedReader;

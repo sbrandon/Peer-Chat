@@ -5,8 +5,11 @@
  */
 package com.peerchat;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -18,29 +21,26 @@ import org.json.simple.JSONValue;
 
 public class Peer {
 	
-	private HashMap<String, String> gatewayPeers = new HashMap<String, String>();
 	private HashMap<String, String> routingTable = new HashMap<String, String>();
 	private String ipAddress;
 	private String nodeId;
+	private PeerUI peerUI;
 
 	//Constructor
 	public Peer(){
-		
-	}
-	
-	//When a peer connects to this node it is added to the gatewayPeers.
-	public void nodeJoined(PeerWorker node){
-		//gatewayPeers.put(node.getNodeId(), node);
+		peerUI = new PeerUI(this);
+		peerUI.start();
 	}
 	
 	//When a node joins the network it must be added to our routing table.
-	public void addToRouting(PeerWorker node){
-		//routingTable.put(node.getNodeId(), node);
+	public void addToRouting(String nodeId, String ipAddress){
+		routingTable.put(nodeId, ipAddress);
 	}
 	
-	//Returns our routing table in json string format.
-	public void routingInfo(String joinNodeId){
-		Map<String, String> routingInfo = new LinkedHashMap<String, String>();
+	//ROUTING_INFO. Returns our routing table in JSON string format. 
+	@SuppressWarnings("unchecked")
+	public void routingInfo(String joinNodeId, String joinIpAddress){
+		Map<String, Serializable> routingInfo = new LinkedHashMap<String, Serializable>();
 		routingInfo.put("type", "ROUTING_INFO");
 		routingInfo.put("gateway_id", nodeId);
 		routingInfo.put("node_id", joinNodeId);
@@ -49,21 +49,55 @@ public class Peer {
 		JSONArray routeTable = new JSONArray();
 		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
 		while(iterator.hasNext()){
+			Entry<String, String> entry = iterator.next();
 			Map<String, String> route = new LinkedHashMap<String, String>();
-			route.put("node_id", iterator.next().getKey());
-			route.put("ip_address", iterator.next().getValue());
+			route.put("node_id", entry.getKey());
+			route.put("ip_address", entry.getValue());
 			routeTable.add(route);
 		}
-		routingInfo.put("route_table", routeTable.toJSONString());
-		System.out.println(JSONValue.toJSONString(routingInfo));
+		routingInfo.put("route_table", routeTable);
+		communicate(joinIpAddress, JSONValue.toJSONString(routingInfo));
+	}
+	
+	//CHAT. takes input from PeerUI to get values from routing table to send message.
+	public void chat(String targetId, String message){
+		//First create the JSON message
+		Map<String, String> chat = new LinkedHashMap<String, String>();
+		chat.put("type", "CHAT");
+		chat.put("target_id", targetId);
+		chat.put("sender_id", nodeId);
+		chat.put("text", message);
+		if(targetId.equals("00")){
+			//Send Chat message to all nodes.
+			Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
+			while(iterator.hasNext()){
+				communicate(iterator.next().getValue(), JSONValue.toJSONString(chat));
+			}
+		}
+		else{
+			String ip = routingTable.get(targetId);
+			communicate(ip, JSONValue.toJSONString(chat));
+		}
+	}
+	
+	//Allows this node to send JSON formatted messages to other nodes with given IP address.
+	public void communicate(String ipAddress, String message){
+		try{
+			Socket socket = new Socket(ipAddress, 8767);
+			DataOutputStream sendMessage = new DataOutputStream(socket.getOutputStream());
+			sendMessage.writeBytes(message + "\n");
+			sendMessage.close();
+			socket.close();
+			System.out.println("NODE-SENT: " + message);
+		}catch(Exception e){
+			System.out.println("ERROR: Could Connect to Gateway");
+		}
 	}
 	
 	//Main method
 	public static void main(String[] args) throws IOException {
 		Peer server = new Peer();
 		GatewayHandler gateWayHandler = new GatewayHandler(server, new ServerSocket(8767));
-		PeerUI peerUI = new PeerUI(server);
-		peerUI.start();
 		gateWayHandler.start();
 	}
 	
