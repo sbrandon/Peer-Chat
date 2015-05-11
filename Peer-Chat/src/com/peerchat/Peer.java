@@ -1,6 +1,7 @@
 /*
  * This Class is the main node class it is responsible for starting the two threads that look after
- * node communication and routing communication in the p2p network. 
+ * node communication and routing communication in the p2p network. This class is also responsible for
+ * outgoing TCP communications.
  * Stephen Brandon May '14
  */
 package com.peerchat;
@@ -88,9 +89,19 @@ public class Peer {
 			sendMessage.writeBytes(message + "\n");
 			sendMessage.close();
 			socket.close();
-			System.out.println("NODE-SENT: " + message);
+			//System.out.println("NODE-SENT: " + message);
 		}catch(Exception e){
 			System.out.println("ERROR: Could Connect to Gateway");
+		}
+	}
+	
+	public void printRoutes(){
+		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
+		System.out.println("| ID | IPADDRESS |");
+		while(iterator.hasNext()){
+			System.out.println("|----------------|");
+			Entry<String, String> entry = iterator.next();
+			System.out.println("| " + entry.getKey() + " | " + entry.getValue() + " |");
 		}
 	}
 	

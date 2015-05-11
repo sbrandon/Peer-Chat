@@ -1,5 +1,5 @@
 /*
- * This thread handles TCP communications for nodes that use this node as a gateway.
+ * This thread handles incoming TCP communications.
  * Stephen Brandon May '14
  */
 package com.peerchat;

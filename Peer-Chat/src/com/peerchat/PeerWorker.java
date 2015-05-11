@@ -69,7 +69,7 @@ public class PeerWorker implements Runnable, PeerChat{
 				String command = "";
 				while(reader.ready()){
 					command = reader.readLine();
-					System.out.println("NODE-RECEIVED: " + command);
+					//System.out.println("NODE-RECEIVED: " + command);
 				}
 				if(!command.isEmpty()){
 					JSONObject json = (JSONObject) new JSONParser().parse(command);
@@ -96,7 +96,8 @@ public class PeerWorker implements Runnable, PeerChat{
 						case "LEAVING_NETWORK":
 							break;
 						case "CHAT":
-							
+							System.out.println("Message From: " + json.get("sender_id"));
+							System.out.println(json.get("text"));
 							break;
 						case "ACK_CHAT":
 							break;
