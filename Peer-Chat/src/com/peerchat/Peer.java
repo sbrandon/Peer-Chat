@@ -22,6 +22,7 @@ import org.json.simple.JSONValue;
 
 public class Peer {
 	
+	//Routing table. Currently all node id's and ip's stored in a single HashMap in every node.
 	private HashMap<String, String> routingTable = new HashMap<String, String>();
 	private String ipAddress;
 	private String nodeId;
@@ -57,12 +58,15 @@ public class Peer {
 			routeTable.add(route);
 		}
 		routingInfo.put("route_table", routeTable);
+		//Send routing table back to joining node.
 		communicate(joinIpAddress, JSONValue.toJSONString(routingInfo));
+		//Send JOINING_NETWORK_RELAY message to tell other nodes to update their tables
+		joinRelay(joinNodeId, joinIpAddress);
 	}
 	
 	//CHAT. takes input from PeerUI to get values from routing table to send message.
 	public void chat(String targetId, String message){
-		//First create the JSON message
+		//Create the JSON message
 		Map<String, String> chat = new LinkedHashMap<String, String>();
 		chat.put("type", "CHAT");
 		chat.put("target_id", targetId);
@@ -81,6 +85,20 @@ public class Peer {
 		}
 	}
 	
+	//JOINING_NETWORK_RELAY. Informs other nodes to update their routing tables with new arrival.
+	public void joinRelay(String joinId, String joinIp){
+		//Create JSON String
+		Map<String, String> relay = new LinkedHashMap<String, String>();
+		relay.put("type", "JOINING_NETWORK_RELAY");
+		relay.put("node_id", joinId);
+		relay.put("ip_address", joinIp);
+		//Send to all nodes in routing table
+		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
+		while(iterator.hasNext()){
+			communicate(iterator.next().getValue(), JSONValue.toJSONString(relay));
+		}
+	}
+	
 	//Allows this node to send JSON formatted messages to other nodes with given IP address.
 	public void communicate(String ipAddress, String message){
 		try{
@@ -95,6 +113,7 @@ public class Peer {
 		}
 	}
 	
+	//Print out routing table for debugging purposes.
 	public void printRoutes(){
 		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
 		System.out.println("| ID | IPADDRESS |");

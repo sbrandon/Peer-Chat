@@ -76,14 +76,20 @@ public class PeerWorker implements Runnable, PeerChat{
 					String type = json.get("type").toString();
 					switch(type){
 						case "JOINING_NETWORK":
+							//Add new node to routing table and reply with copy of routing table.
 							String nodeId = json.get("node_id").toString();
 							String ipAddress = json.get("ip_address").toString();
 							peer.addToRouting(nodeId, ipAddress);
 							peer.routingInfo(nodeId, ipAddress);
 							break;
 						case "JOINING_NETWORK_RELAY":
+							//Update routing table with new node.
+							String newId = json.get("node_id").toString();
+							String newIp = json.get("ip_address").toString();
+							peer.addToRouting(newId, newIp);
 							break;
 						case "ROUTING_INFO":
+							//Populate routing table with values sent from gateway node.
 							JSONArray routes = (JSONArray) json.get("route_table");
 							//Add each route from the routing info message to our routing table.
 							for(int i = 0; i <routes.size(); i++){
@@ -96,6 +102,7 @@ public class PeerWorker implements Runnable, PeerChat{
 						case "LEAVING_NETWORK":
 							break;
 						case "CHAT":
+							//Print received chat messages to console.
 							System.out.println("Message From: " + json.get("sender_id"));
 							System.out.println(json.get("text"));
 							break;

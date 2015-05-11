@@ -38,7 +38,7 @@ public class PeerUI extends Thread{
 			System.out.println("Please Join The Network...");
 			System.out.println("Enter Node ID:");
 			String nodeId = reader.readLine();
-			System.out.println("Enter Gateway IP Address");
+			System.out.println("Enter Gateway IP Address (localhost for first node)");
 			String gatewayIp = reader.readLine();
 			Map<String, String> map = new LinkedHashMap<String, String>();
 			map.put("type","JOINING_NETWORK");
@@ -57,7 +57,7 @@ public class PeerUI extends Thread{
 	//Send chat messages to other nodes.
 	public void chat(){
 		try{
-			System.out.println("Enter Target ID (00 to send to all nodes)");
+			System.out.println("Enter Target ID (00 broadcast to all nodes)");
 			String targetId = reader.readLine();
 			System.out.println("Enter Your Message...");
 			String message = reader.readLine();
