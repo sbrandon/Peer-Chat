@@ -2,7 +2,7 @@
  * This Class is the main node class it is responsible for starting the two threads that look after
  * node communication and routing communication in the p2p network. This class is also responsible for
  * outgoing TCP communications.
- * Stephen Brandon May '14
+ * Stephen Brandon May '15
  */
 package com.peerchat;
 
@@ -27,6 +27,7 @@ public class Peer {
 	private String ipAddress;
 	private String nodeId;
 	private PeerUI peerUI;
+	private String pingAck = "";
 
 	//Constructor
 	public Peer(){
@@ -109,6 +110,29 @@ public class Peer {
 		broadcast(JSONValue.toJSONString(leave));
 	}
 	
+	//PING. Ping another node to see if it is alive.
+	public void ping(String targetId){
+		//Create JSON String
+		Map<String, String> ping = new LinkedHashMap<String, String>();
+		ping.put("type", "PING");
+		ping.put("target_id", targetId);
+		ping.put("sender_id", nodeId);
+		ping.put("ip_address", ipAddress);
+		String targetIp = routingTable.get(targetId);
+		communicate(targetIp, JSONValue.toJSONString(ping));
+	}
+	
+	//ACK. Sends an ACK message back to node that sent us ping.
+	public void sendAck(String targetId){
+		//Create JSON String
+		Map<String, String> ack = new LinkedHashMap<String, String>();
+		ack.put("type", "ACK");
+		ack.put("node_id", nodeId);
+		ack.put("ip_address", ipAddress);
+		String targetIp = routingTable.get(targetId);
+		communicate(targetIp, JSONValue.toJSONString(ack));
+	}
+	
 	//Sends message to every node on routing table.
 	public void broadcast(String message){
 		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
@@ -127,7 +151,7 @@ public class Peer {
 			socket.close();
 			//System.out.println("NODE-SENT: " + message);
 		}catch(Exception e){
-			System.out.println("ERROR: Could Connect to Gateway");
+			System.out.println("ERROR: Could Open Socket to: " + ipAddress);
 		}
 	}
 	
@@ -139,6 +163,7 @@ public class Peer {
 			System.out.println("|----------------|");
 			Entry<String, String> entry = iterator.next();
 			System.out.println("| " + entry.getKey() + " | " + entry.getValue() + " |");
+			System.out.println("");
 		}
 	}
 	
@@ -164,6 +189,14 @@ public class Peer {
 
 	public void setNodeId(String nodeId) {
 		this.nodeId = nodeId;
+	}
+
+	public String getPingAck() {
+		return pingAck;
+	}
+
+	public void setPingAck(String pingAck) {
+		this.pingAck = pingAck;
 	}
 	
 }

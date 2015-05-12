@@ -1,6 +1,6 @@
 /*
  * This thread handles incoming TCP communications.
- * Stephen Brandon May '14
+ * Stephen Brandon May '15
  */
 package com.peerchat;
 

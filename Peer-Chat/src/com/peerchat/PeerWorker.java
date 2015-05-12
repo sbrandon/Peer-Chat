@@ -1,6 +1,6 @@
 /*
  * This class represents the functions that other nodes can call.
- * Stephen Brandon May '14
+ * Stephen Brandon May '15
  */
 package com.peerchat;
 
@@ -22,15 +22,6 @@ public class PeerWorker implements Runnable, PeerChat{
 	public PeerWorker(Socket socket, Peer peer){
 		this.socket = socket;
 		this.peer = peer;
-	}
-	
-	//The following function implements hashing of an arbitrary string.
-	public int hashCode(String str){
-		int hash = 0;
-		for(int i = 0; i < str.length(); i++){
-			hash = hash * 31 + str.charAt(i);
-		}
-		return Math.abs(hash);
 	}
 
 	@Override
@@ -106,8 +97,10 @@ public class PeerWorker implements Runnable, PeerChat{
 							break;
 						case "CHAT":
 							//Print received chat messages to console.
+							System.out.println("");
 							System.out.println("Message From: " + json.get("sender_id"));
 							System.out.println(json.get("text"));
+							System.out.println("");
 							break;
 						case "ACK_CHAT":
 							break;
@@ -116,8 +109,12 @@ public class PeerWorker implements Runnable, PeerChat{
 						case "CHAT_RESPONSE":
 							break;
 						case "PING":
+							String responseId = json.get("sender_id").toString();
+							peer.sendAck(responseId);
 							break;
 						case "ACK":
+							String ackId = json.get("node_id").toString();
+							peer.setPingAck(ackId);
 							break;
 					}
 				}
