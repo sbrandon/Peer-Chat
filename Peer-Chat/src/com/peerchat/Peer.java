@@ -79,12 +79,10 @@ public class Peer {
 		chat.put("text", message);
 		if(targetId.equals("00")){
 			//Send Chat message to all nodes.
-			Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
-			while(iterator.hasNext()){
-				communicate(iterator.next().getValue(), JSONValue.toJSONString(chat));
-			}
+			broadcast(JSONValue.toJSONString(chat));
 		}
 		else{
+			//Send Chat message to target ID.
 			String ip = routingTable.get(targetId);
 			communicate(ip, JSONValue.toJSONString(chat));
 		}
@@ -98,10 +96,7 @@ public class Peer {
 		relay.put("node_id", joinId);
 		relay.put("ip_address", joinIp);
 		//Send to all nodes in routing table
-		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
-		while(iterator.hasNext()){
-			communicate(iterator.next().getValue(), JSONValue.toJSONString(relay));
-		}
+		broadcast(JSONValue.toJSONString(relay));
 	}
 	
 	//LEAVING_NETWORK. Informs other nodes that this node is leaving the network and to update their routing tables.
@@ -111,9 +106,14 @@ public class Peer {
 		leave.put("type", "LEAVING_NETWORK");
 		leave.put("node_id", nodeId);
 		//Send to all nodes in routing table
+		broadcast(JSONValue.toJSONString(leave));
+	}
+	
+	//Sends message to every node on routing table.
+	public void broadcast(String message){
 		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
 		while(iterator.hasNext()){
-			communicate(iterator.next().getValue(), JSONValue.toJSONString(leave));
+			communicate(iterator.next().getValue(), message);
 		}
 	}
 	
