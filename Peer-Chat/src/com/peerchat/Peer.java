@@ -34,9 +34,14 @@ public class Peer {
 		peerUI.start();
 	}
 	
-	//When a node joins the network it must be added to our routing table.
+	//When a node joins the network it's added to our routing table.
 	public void addToRouting(String nodeId, String ipAddress){
 		routingTable.put(nodeId, ipAddress);
+	}
+	
+	//When a node leaves the network it's removed from our routing table.
+	public void removeFromRouting(String leavingId){
+		routingTable.remove(leavingId);
 	}
 	
 	//ROUTING_INFO. Returns our routing table in JSON string format. 
@@ -96,6 +101,19 @@ public class Peer {
 		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
 		while(iterator.hasNext()){
 			communicate(iterator.next().getValue(), JSONValue.toJSONString(relay));
+		}
+	}
+	
+	//LEAVING_NETWORK. Informs other nodes that this node is leaving the network and to update their routing tables.
+	public void leaveNetwork(){
+		//Create JSON String
+		Map<String, String> leave = new LinkedHashMap<String, String>();
+		leave.put("type", "LEAVING_NETWORK");
+		leave.put("node_id", nodeId);
+		//Send to all nodes in routing table
+		Iterator<Entry<String, String>> iterator = routingTable.entrySet().iterator();
+		while(iterator.hasNext()){
+			communicate(iterator.next().getValue(), JSONValue.toJSONString(leave));
 		}
 	}
 	

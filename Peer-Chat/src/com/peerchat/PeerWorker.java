@@ -100,6 +100,9 @@ public class PeerWorker implements Runnable, PeerChat{
 							}
 							break;
 						case "LEAVING_NETWORK":
+							//Remove node from routing table.
+							String leavingId = json.get("node_id").toString();
+							peer.removeFromRouting(leavingId);
 							break;
 						case "CHAT":
 							//Print received chat messages to console.

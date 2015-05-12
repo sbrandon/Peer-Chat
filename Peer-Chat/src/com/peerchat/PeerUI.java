@@ -38,7 +38,7 @@ public class PeerUI extends Thread{
 			System.out.println("Please Join The Network...");
 			System.out.println("Enter Node ID:");
 			String nodeId = reader.readLine();
-			System.out.println("Enter Gateway IP Address (localhost for first node)");
+			System.out.println("Enter Gateway IP Address (Blank you're the first node in the network)");
 			String gatewayIp = reader.readLine();
 			Map<String, String> map = new LinkedHashMap<String, String>();
 			map.put("type","JOINING_NETWORK");
@@ -95,7 +95,7 @@ public class PeerUI extends Thread{
 	
 	//Leave the network
 	public void leave(){
-		//TODO Implement graceful exit!
+		peer.leaveNetwork();
 		System.exit(0);
 	}
 	
